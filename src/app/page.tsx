@@ -32,8 +32,13 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="max-w-3xl"
+          className="max-w-3xl flex flex-col items-center"
         >
+          <img 
+            src="/logos/COLOREDLOGO.png" 
+            alt="DeepVerify Brand Logo" 
+            className="h-20 w-auto mb-8 object-contain"
+          />
           <span className="badge-trend mb-6 inline-flex">
             <TrendingUp size={13} /> Trend-Aware Misinformation Defense
           </span>

@@ -30,9 +30,12 @@ export function Navbar({ user }: { user: { email?: string } | null }) {
         <header className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-md bg-[#080c14]/80">
             <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-                    <ShieldHalf size={20} className="text-indigo-400" />
-                    Deep<span className="text-indigo-400">Verify</span>
+                <Link href="/" className="flex items-center gap-2">
+                    <img 
+                        src="/logos/WHITELOGO.png" 
+                        alt="DeepVerify Logo" 
+                        className="h-8 w-auto object-contain"
+                    />
                 </Link>
 
                 {/* Desktop nav */}
