@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
             const s3Key = `uploads/${scan.id}.${fileExtension}`;
 
             const command = new PutObjectCommand({
-                Bucket: process.env.AWS_S3_BUCKET_NAME,
+                Bucket: process.env.APP_AWS_S3_BUCKET_NAME,
                 Key: s3Key,
                 ContentType: fileType,
             });
@@ -117,7 +117,7 @@ export async function PUT(req: NextRequest) {
                     // 2. Fetch from S3 if it's an upload
                     if (s3Key) {
                         const command = new GetObjectCommand({
-                            Bucket: process.env.AWS_S3_BUCKET_NAME,
+                            Bucket: process.env.APP_AWS_S3_BUCKET_NAME,
                             Key: s3Key,
                         });
                         const response = await s3.send(command);
@@ -159,8 +159,8 @@ export async function PUT(req: NextRequest) {
             })();
         } else {
             // Trigger AWS Lambda via API Gateway URL
-            if (process.env.AWS_API_GATEWAY_ENDPOINT) {
-                fetch(process.env.AWS_API_GATEWAY_ENDPOINT, {
+            if (process.env.APP_AWS_API_GATEWAY_ENDPOINT) {
+                fetch(process.env.APP_AWS_API_GATEWAY_ENDPOINT, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ scanId, s3Key, scanType, mediaContext }),
