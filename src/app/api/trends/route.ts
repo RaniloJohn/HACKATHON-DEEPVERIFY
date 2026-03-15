@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 
+export const maxDuration = 60; 
+
 // Initialize Gemini client (it will automatically pick up GEMINI_API_KEY from environment)
 const ai = new GoogleGenAI({});
 

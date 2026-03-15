@@ -92,9 +92,16 @@ export async function GET(req: NextRequest) {
     }
 }
 
+export const maxDuration = 60; // Increase timeout for heavy analysis tasks
+
 export async function PUT(req: NextRequest) {
     try {
         const { scanId, s3Key, scanType, mediaContext } = await req.json();
+
+        if (!scanId) {
+            return NextResponse.json({ error: "Missing scanId" }, { status: 400 });
+        }
+
         const supabase = createAdminClient();
 
         // Mark as processing
@@ -102,7 +109,6 @@ export async function PUT(req: NextRequest) {
 
         // Trigger processing...
         if (process.env.USE_LOCAL_SCAN === "true") {
-            // Use waitUntil if available (Next.js 15 / Vercel) to ensure processing finishes
             const processScan = async () => {
                 try {
                     console.log(`[LOCAL SCAN] Starting for ${scanId}`);
@@ -116,17 +122,21 @@ export async function PUT(req: NextRequest) {
 
                     // 2. Fetch from S3 if it's an upload
                     if (s3Key) {
-                        const command = new GetObjectCommand({
-                            Bucket: process.env.APP_AWS_S3_BUCKET_NAME,
-                            Key: s3Key,
-                        });
-                        const response = await s3.send(command);
-                        const arrayBuffer = await response.Body?.transformToByteArray();
-                        if (arrayBuffer) {
-                            mediaData = {
-                                data: Buffer.from(arrayBuffer).toString("base64"),
-                                mimeType: scan.file_type || (s3Key.endsWith(".mp4") ? "video/mp4" : "image/jpeg")
-                            };
+                        try {
+                            const command = new GetObjectCommand({
+                                Bucket: process.env.APP_AWS_S3_BUCKET_NAME,
+                                Key: s3Key,
+                            });
+                            const response = await s3.send(command);
+                            const arrayBuffer = await response.Body?.transformToByteArray();
+                            if (arrayBuffer) {
+                                mediaData = {
+                                    data: Buffer.from(arrayBuffer).toString("base64"),
+                                    mimeType: scan.file_type || (s3Key.endsWith(".mp4") ? "video/mp4" : "image/jpeg")
+                                };
+                            }
+                        } catch (s3Err) {
+                            console.error("[S3 FETCH FAILED]", s3Err);
                         }
                     }
 
@@ -159,20 +169,18 @@ export async function PUT(req: NextRequest) {
                 }
             };
 
-            // In Next.js 15, we can use waitUntil if we want it to run in background.
-            // If we don't have it, we can at least invoke it.
-            // But to be MOST robust for Hackathon on Vercel without waitUntil, we could also just await it
-            // if we are confident in the <10s speed.
-            // For now, let's try calling it and hope for the best, or use waitUntil if available.
+            // Use the standard Next.js 15+ waitUntil if available
+            // Note: In some versions it's passed as a second arg to handler or available in next/server
             try {
                 const { waitUntil } = require('next/server');
-                if (waitUntil) {
+                if (typeof waitUntil === 'function') {
                     waitUntil(processScan());
                 } else {
-                    processScan(); 
+                    // Fallback to awaiting if we have 60s maxDuration
+                    await processScan();
                 }
             } catch (e) {
-                processScan();
+                await processScan();
             }
         } else {
             // Trigger AWS Lambda via API Gateway URL
