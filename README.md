@@ -9,7 +9,7 @@ During major crises (wars, political unrest), malicious actors deploy AI-generat
 
 **DeepVerify** solves this by providing an instant, accessible scanner. You upload an image or video, and our engine calculates a deepfake probability score. 
 
-**Our Killer Feature:** If you provide context (e.g. "Protest at a gas station"), our **Trend-Aware Engine** uses OpenAI and NewsAPI to cross-reference your upload against the current global news cycle, alerting you if the media is likely part of a targeted misinformation campaign exploiting a trending crisis.
+**Our Killer Feature:** If you provide context (e.g. "Protest at a gas station"), our **Trend-Aware Engine** uses Gemini and NewsAPI to cross-reference your upload against the current global news cycle, alerting you if the media is likely part of a targeted misinformation campaign exploiting a trending crisis.
 
 ---
 
@@ -21,7 +21,7 @@ During major crises (wars, political unrest), malicious actors deploy AI-generat
 - **AI / Computer Vision**:
   - **Hugging Face Inference API** (Deepfake likelihood classification)
   - **AWS Rekognition** (Semantic object / scene labeling)
-  - **OpenAI GPT-4o-mini & NewsAPI** (Trend-Awareness semantic matching)
+  - **Gemini & NewsAPI** (Trend-Awareness semantic matching & Lite Heuristics)
 - **Deployment**: Vercel (Frontend)
 
 ---
@@ -41,7 +41,7 @@ Copy the template and fill it out:
 cp .env.example .env.local
 ```
 
-*Note: For hackathon judging/testing, the app includes a **Mock Mode**! If you leave the `.env.local` Supabase, AWS, or OpenAI variables empty (or as their default placeholder text), the app will simulate scans and API responses so you can click through the UI without deploying any backend infrastructure.*
+*Note: For hackathon judging/testing, the app includes a **Mock Mode**! If you leave the `.env.local` Supabase or AWS variables empty (or as their default placeholder text), the app will simulate scans and API responses so you can click through the UI without deploying any backend infrastructure.*
 
 ### 3. Run the Development Server
 ```bash

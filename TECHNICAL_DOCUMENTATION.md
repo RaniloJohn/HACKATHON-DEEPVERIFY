@@ -16,7 +16,7 @@ The core of DeepVerify is a specialized **Triple-Parallel Pipeline** orchestrate
 
 ### Wave 3: Ground-Truth News Verification
 - **Logic**: Cross-references the "Primary Claim" against real-time global news databases using **Tavily AI** and **Firecrawl**.
-- **Synthesis**: A final reasoning layer (Gemini/OpenAI) determines if the visually observed event is a confirmed news story or a documented hoax.
+- **Synthesis**: A final reasoning layer (Gemini/Lite Heuristics) determines if the visually observed event is a confirmed news story or a documented hoax.
 
 ---
 
@@ -34,9 +34,8 @@ During news verification, LLMs can "echo" irrelevant search snippets. I engineer
 
 ### C. Multi-Layered Fallback Synthesis
 Reliability is key for a hackathon submission. The system features a recursive fallback chain:
-1.  **Primary**: Gemini 2.0 (High Precision)
-2.  **Secondary**: OpenAI GPT-4o Plus (Resilience)
-3.  **Tertiary**: Lite Heuristic Pattern Matching (Zero-Latency Fallback)
+1.  **Primary**: Gemini 2.0 (High Precision Vision)
+2.  **Secondary**: Lite Heuristic Pattern Matching (Zero-Latency Validation)
 
 ---
 
@@ -44,7 +43,7 @@ Reliability is key for a hackathon submission. The system features a recursive f
 
 ### Secure Handoff Configuration
 - **Secret Sanitization**: Performed a global regex-based security sweep to ensure zero hardcoded API keys exist in the repository.
-- **Unified Environment**: Standardized all external dependencies (AWS, Tavily, Gemini, OpenAI, Supabase) into a versioned `.env.example` for immediate deployment.
+- **Unified Environment**: Standardized all external dependencies (AWS, Tavily, Gemini, Supabase) into a versioned `.env.example` for immediate deployment.
 - **Git Hygiene**: Cleaned the commit history of sensitive data and implemented a rigorous `.gitignore` to prevent session/test data leaks.
 
 ---
