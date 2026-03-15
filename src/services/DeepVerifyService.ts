@@ -54,50 +54,49 @@ export class DeepVerifyService {
             processedMedia = await this.fetchMediaToBase64(mediaUrl);
         }
 
-        // 1. Prepare standard forensic check
-        const hfResult = await this.runHuggingFaceScan(mediaUrl, processedMedia);
-        
-        // Add artificial delay to avoid hitting Gemini rate limits too fast
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // 1. Parallelize initial scans (Forensics + Vision/OCR)
+        console.log("[DeepVerify] Starting parallel Analysis...");
+        const [hfResult, visionResult] = await Promise.all([
+            this.runHuggingFaceScan(mediaUrl, processedMedia),
+            this.runGeminiVision(processedMedia, mediaContext)
+        ]);
 
-        // 2. Prepare Vision OCR/Analysis
-        const visionResult = await this.runGeminiVision(processedMedia, mediaContext);
-        
-        // Add another delay before ground truth verification
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // 2. Extract results
+        const fakeScore = hfResult.probability;
+        const { primaryClaim, searchQuery, entities, description, manipulationScore, artifacts, analysis } = visionResult;
 
-        // 3. Second Wave: News/Truth Verification using pre-extracted fields from Wave 1
-        const truthResult = await this.verifyGroundTruth(
-            visionResult.description || "", 
-            visionResult.searchQuery || visionResult.description || "",
-            visionResult.primaryClaim || visionResult.description || "",
-            visionResult.entities || []
-        );
+        // 3. Truth Verification if applicable
+        let truthResult = { summary: "", score: 0.5, isVerified: false };
+        if (searchQuery || primaryClaim || description) {
+            truthResult = await this.verifyGroundTruth(
+                description || "",
+                searchQuery || description || "",
+                primaryClaim || description || "",
+                entities || []
+            );
+        }
 
         console.timeEnd("[PIPELINE] DeepVerify");
 
         // SMART SCORING:
-        // 1. If we have a verified fact, we trust the digital forensics (HF) more than the vision fallback.
-        // 2. If vision timed out (0.5), it shouldn't override a low HF score if truth is verified.
-        let fakeProb = Math.max(hfResult.probability, visionResult.manipulationScore || 0);
+        let fakeProb = Math.max(fakeScore, manipulationScore || 0);
         
         if (truthResult.isVerified) {
             // Dampen the fake probability if the story is confirmed real.
-            // We take the digital scan more seriously than the inconclusive vision fallback.
-            fakeProb = Math.min(fakeProb, hfResult.probability + 0.1); 
+            fakeProb = Math.min(fakeProb, fakeScore + 0.1); 
         }
 
         return {
             fakeProbability: fakeProb,
             confidenceScore: 0.85,
             confidenceLabel: this.getConfidenceLabel(fakeProb, truthResult.isVerified),
-            analysis: visionResult.analysis || "Analysis complete.",
+            analysis: analysis || "Analysis complete.",
             truthSummary: truthResult.summary,
             truthScore: truthResult.score,
             isVerified: truthResult.isVerified,
             technicalDetails: [
-                ...hfResult.signals,
-                ...visionResult.artifacts
+                ...(hfResult.signals || []),
+                ...(artifacts || [])
             ]
         };
     }

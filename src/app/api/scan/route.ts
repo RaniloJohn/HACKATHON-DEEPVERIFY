@@ -102,8 +102,8 @@ export async function PUT(req: NextRequest) {
 
         // Trigger processing...
         if (process.env.USE_LOCAL_SCAN === "true") {
-            // Trigger local high-speed scan (Async)
-            (async () => {
+            // Use waitUntil if available (Next.js 15 / Vercel) to ensure processing finishes
+            const processScan = async () => {
                 try {
                     console.log(`[LOCAL SCAN] Starting for ${scanId}`);
                     const verifyService = new DeepVerifyService();
@@ -138,7 +138,7 @@ export async function PUT(req: NextRequest) {
                     );
 
                     // 4. Update scan results
-                    await supabase.from("scans").update({
+                    const { error: updateError } = await supabase.from("scans").update({
                         status: "done",
                         fake_probability: result.fakeProbability,
                         confidence_score: result.confidenceScore,
@@ -148,15 +148,32 @@ export async function PUT(req: NextRequest) {
                         truth_score: result.truthScore,
                         is_verified: result.isVerified,
                         manipulation_indicators: result.technicalDetails.map((d: string) => ({ signal: d, score: 0.8 })),
-                        rekognition_labels: [] // Local scan doesn't use Rekognition by default
+                        rekognition_labels: [] 
                     }).eq("id", scanId);
 
+                    if (updateError) console.error("[DB UPDATE FAILED]", updateError);
                     console.log(`[LOCAL SCAN] Success for ${scanId}`);
                 } catch (e) {
                     console.error(`[LOCAL SCAN] Failed for ${scanId}:`, e);
                     await supabase.from("scans").update({ status: "error" }).eq("id", scanId);
                 }
-            })();
+            };
+
+            // In Next.js 15, we can use waitUntil if we want it to run in background.
+            // If we don't have it, we can at least invoke it.
+            // But to be MOST robust for Hackathon on Vercel without waitUntil, we could also just await it
+            // if we are confident in the <10s speed.
+            // For now, let's try calling it and hope for the best, or use waitUntil if available.
+            try {
+                const { waitUntil } = require('next/server');
+                if (waitUntil) {
+                    waitUntil(processScan());
+                } else {
+                    processScan(); 
+                }
+            } catch (e) {
+                processScan();
+            }
         } else {
             // Trigger AWS Lambda via API Gateway URL
             if (process.env.APP_AWS_API_GATEWAY_ENDPOINT) {

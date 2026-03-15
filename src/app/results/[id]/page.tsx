@@ -68,7 +68,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                 if (isMounted) {
                     setScan(data);
                     if (data.status === "pending" || data.status === "processing") {
-                        timeoutId = setTimeout(poll, 4000); // 4 second interval
+                        timeoutId = setTimeout(poll, 2000); // Reduced from 4s to 2s
                     }
                 }
             } catch (err) {
@@ -116,9 +116,12 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
                         <div className="h-24 bg-white/5 rounded-xl border border-white/5 mt-4" />
 
-                        <div className="flex justify-center pt-6 text-gray-500 gap-2">
-                            <Loader2 size={18} className="animate-spin" />
-                            <span className="text-sm">Analyzing deepfake models...</span>
+                        <div className="flex justify-center pt-6 text-gray-400 gap-3 items-center">
+                            <Loader2 size={18} className="animate-spin text-blue-400" />
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold text-white">Analyzing DeepVerify Triple-Pipeline...</span>
+                                <span className="text-[10px] text-gray-500 uppercase tracking-widest">Running Forensics + Fact-Checking</span>
+                            </div>
                         </div>
                     </div>
                 ) : scan?.status === "error" ? (
