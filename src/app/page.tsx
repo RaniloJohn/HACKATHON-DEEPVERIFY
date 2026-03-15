@@ -37,7 +37,7 @@ export default function HomePage() {
           <img 
             src="/logos/COLOREDLOGO.png" 
             alt="DeepVerify Brand Logo" 
-            className="h-40 w-auto mb-8 object-contain"
+            className="h-[450px] w-auto -mt-28 -mb-40 object-contain"
           />
           <span className="badge-trend mb-6 inline-flex">
             <TrendingUp size={13} /> Trend-Aware Misinformation Defense

@@ -30,11 +30,11 @@ export function Navbar({ user }: { user: { email?: string } | null }) {
         <header className="sticky top-0 z-50 border-b border-white/5 backdrop-blur-md bg-[#080c14]/80">
             <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-16">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2">
+                <Link href="/" className="flex items-center">
                     <img 
                         src="/logos/WHITELOGO.png" 
                         alt="DeepVerify Logo" 
-                        className="h-12 w-auto object-contain"
+                        className="h-32 w-auto object-contain -my-6"
                     />
                 </Link>
 
