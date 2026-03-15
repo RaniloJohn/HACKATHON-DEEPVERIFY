@@ -34,7 +34,7 @@ export function Navbar({ user }: { user: { email?: string } | null }) {
                     <img 
                         src="/logos/WHITELOGO.png" 
                         alt="DeepVerify Logo" 
-                        className="h-8 w-auto object-contain"
+                        className="h-10 w-auto object-contain"
                     />
                 </Link>
 
