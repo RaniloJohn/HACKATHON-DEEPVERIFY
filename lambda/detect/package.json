@@ -1,0 +1,12 @@
+{
+    "name": "deepfake-detect-worker",
+    "version": "1.0.0",
+    "description": "AWS Lambda function for deepfake detection pipeline",
+    "main": "index.js",
+    "dependencies": {
+        "@aws-sdk/client-rekognition": "^3.0.0",
+        "@aws-sdk/client-s3": "^3.1004.0",
+        "@aws-sdk/s3-request-presigner": "^3.1004.0",
+        "@supabase/supabase-js": "^2.0.0"
+    }
+}

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.*
 .yarn/*
@@ -32,6 +33,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+lambda/.env*
 
 # vercel
 .vercel
@@ -39,3 +41,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# temp and test data
+/tmp
+/scripts/verify-openai.ts
+test-*.js
+test_*.js
+test_*.ts
+*.html
+/public/samples/
+/public/gas-station.png
+FINAL_PITCH.md
+PRODUCTION_KEYS_GUIDE.md
+dump-*.js
+trigger_debug_scan.js
+verify-tiktok-fix.js
+supabase_schema.sql
+tiktok-*.html

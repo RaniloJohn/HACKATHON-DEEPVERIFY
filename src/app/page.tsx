@@ -1,65 +1,84 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { ShieldCheck, TrendingUp, Zap } from "lucide-react";
+import { CommunityFeed } from "@/components/CommunityFeed";
+
+const features = [
+  {
+    icon: ShieldCheck,
+    title: "AI-Powered Detection",
+    desc: "Hugging Face deepfake models + AWS Rekognition analyze every pixel.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Trend-Aware Engine",
+    desc: "Cross-references your media against today's top global news topics.",
+  },
+  {
+    icon: Zap,
+    title: "Instant Confidence Score",
+    desc: "Get a clear probability score and human-readable explanation in seconds.",
+  },
+];
+
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen flex flex-col">
+      {/* ── Hero ── */}
+      <section className="flex-1 flex flex-col items-center justify-center text-center px-6 py-24 gap-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-3xl"
+        >
+          <span className="badge-trend mb-6 inline-flex">
+            <TrendingUp size={13} /> Trend-Aware Misinformation Defense
+          </span>
+          <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6">
+            Is that video{" "}
+            <span className="text-indigo-400">real</span> or{" "}
+            <span className="text-red-400">fake</span>?
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-gray-400 text-lg mb-10 max-w-xl mx-auto">
+            Upload or paste a link to any image or video. DeepVerify analyzes it for deepfake
+            manipulation and flags if it relates to a high-risk global news event.
           </p>
+          <Link href="/scan">
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              className="btn-primary text-base px-8 py-4 glow-indigo"
+            >
+              Analyze Media Now →
+            </motion.button>
+          </Link>
+        </motion.div>
+
+        {/* ── Feature Cards ── */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-12 max-w-4xl w-full">
+          {features.map((f, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + i * 0.1 }}
+              className="glass-card p-6 text-left"
+            >
+              <f.icon size={24} className="text-indigo-400 mb-3" />
+              <h3 className="font-semibold text-white mb-1">{f.title}</h3>
+              <p className="text-gray-400 text-sm">{f.desc}</p>
+            </motion.div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      {/* ── Live Global Feed ── */}
+      <section className="w-full pb-24">
+        <CommunityFeed />
+      </section>
+    </main>
   );
 }
