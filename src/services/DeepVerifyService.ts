@@ -197,6 +197,9 @@ export class DeepVerifyService {
                 6. PRIMARY CLAIM: Extract the core factual claim being made.
                 7. ENTITIES: List key people, locations, or organizations mentioned.
                 
+                GEOPOLITICAL GUARDRAIL: Identify the location/country of the scene if possible (e.g., flags, local language, recognizable landmarks). 
+                If the person/event in the image is local (e.g., Philippines), ensure the primaryClaim and searchQuery reflect that local context. Do NOT hallucinate global trending figures if the visual evidence points elsewhere.
+                
                 OCR HINT (Extracted via AWS): "${prioritizedHeadline}"
 
                 Respond in JSON format:
@@ -264,8 +267,11 @@ export class DeepVerifyService {
     }
 
     private async verifyGroundTruth(context: string, query: string, primaryClaim: string, entities: string[]) {
-        if (!context || context.length < 10) return { isVerified: false, score: 0, summary: "Insufficient data for reality check." };
+        if (!context || context.length < 5 || (!query && !primaryClaim)) {
+            return { isVerified: false, score: 0, summary: "Insufficient data extracted for news verification." };
+        }
 
+        const effectiveQuery = query || primaryClaim || context;
         let snippets = "";
         let answer = "";
         
@@ -273,14 +279,14 @@ export class DeepVerifyService {
             const tavilyKey = process.env.TAVILY_API_KEY;
             if (!tavilyKey) throw new Error("Missing Tavily API key");
 
-            console.log("[GROUNDING] Searching Tavily for:", query);
+            console.log("[GROUNDING] Searching Tavily for:", effectiveQuery);
 
             const searchResponse = await fetch("https://api.tavily.com/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     api_key: tavilyKey,
-                    query: `latest news: ${query}`,
+                    query: `verify news: ${effectiveQuery}`,
                     search_depth: "advanced",
                     include_answer: true,
                     max_results: 5
@@ -364,22 +370,50 @@ export class DeepVerifyService {
         const lowerSnippets = snippets.toLowerCase();
         const lowerAnswer = answer.toLowerCase();
 
-        // Simple keyword check for verification
-        const keyTerms = lowerClaim.split(' ').filter(word => word.length > 4);
+        // High-sensitivity entity matching
+        const keyTerms = lowerClaim.split(' ').filter(word => word.length > 2); // Lowered threshold for short entities like "VP", "PH"
         let matchCount = 0;
+        
+        // Exact term matching from search results
         for (const term of keyTerms) {
             if (lowerSnippets.includes(term) || lowerAnswer.includes(term)) matchCount++;
         }
 
-        const matchRatio = matchCount / keyTerms.length;
-        const isLikelyTrue = matchRatio > 0.4 || lowerAnswer.includes("confirmed") || lowerAnswer.includes("warned");
+        // Hallucination / Entity Drift Filter
+        // If the news answer mentions high-profile trending subjects that were NOT in the claim, it's a hallucination.
+        const trendingEntities = ["trump", "biden", "elon", "musk", "putin", "zelensky", "obama", "harris"];
+        let entityDrift = false;
+        let driftedEntity = "";
+
+        for (const entity of trendingEntities) {
+            if (lowerAnswer.includes(entity) && !lowerClaim.includes(entity)) {
+                entityDrift = true;
+                driftedEntity = entity;
+                break;
+            }
+        }
+
+        const matchRatio = matchCount / (keyTerms.length || 1);
+        
+        // Geopolitical Consistency Check:
+        const likelyClaimCountry = lowerClaim.includes("ph") || lowerClaim.includes("philippines") || lowerClaim.includes("manila") ? "ph" : "global";
+        const likelySnippetCountry = lowerSnippets.includes("philippines") || lowerSnippets.includes("gma") || lowerSnippets.includes("inquirer") ? "ph" : "us/global";
+        
+        let geopoliticalPenalty = 0;
+        if (likelyClaimCountry === "ph" && likelySnippetCountry !== "ph" && !lowerSnippets.includes("philippine")) {
+            geopoliticalPenalty = 0.4;
+        }
+
+        const isLikelyTrue = (matchRatio > 0.4 || lowerAnswer.includes("confirmed")) && geopoliticalPenalty === 0 && !entityDrift;
 
         return {
             isVerified: isLikelyTrue,
-            score: isLikelyTrue ? 0.8 : 0.2,
-            summary: answer ? 
+            score: Math.max(0, (isLikelyTrue ? 0.85 : 0.1) - geopoliticalPenalty - (entityDrift ? 0.4 : 0)),
+            summary: (isLikelyTrue && answer) ? 
                 `Reality Check (Heuristic): ${answer}` : 
-                `Reality Check (Heuristic): ${isLikelyTrue ? "Search results support this claim." : "No clear confirmation found in news sources."}`
+                entityDrift ? 
+                    `Reality Check Rejected: News grounding drifted to unrelated trending subjects (${driftedEntity}). No confirmation for the specific claim.` :
+                    `Reality Check (Heuristic): ${isLikelyTrue ? "Search results support this claim." : "No clear confirmation found in news sources."}`
         };
     }
 
